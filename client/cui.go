@@ -222,7 +222,7 @@ func pasteDown(g *gocui.Gui, cv *gocui.View) error {
 }
 
 func RunMain() {
-	// step1 创建caht的核心对象
+	// step1 创建chat的核心对象
 	chat = sdk.NewChat("127.0.0.1:8080", "logic", "12312321", "2131")
 	// step2 创建 GUI 图层对象并进行参与与回调函数的配置
 	g, err := gocui.NewGui(gocui.OutputNormal)
