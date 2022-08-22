@@ -3,10 +3,10 @@ package discovery
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/bytedance/gopkg/util/logger"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/hardcore-os/plato/common/config"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -18,10 +18,10 @@ type ServiceDiscovery struct {
 }
 
 //NewServiceDiscovery  新建发现服务
-func NewServiceDiscovery(ctx *context.Context, endpoints []string) *ServiceDiscovery {
+func NewServiceDiscovery(ctx *context.Context) *ServiceDiscovery {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   endpoints,
-		DialTimeout: 5 * time.Second,
+		Endpoints:   config.GetEndpointsForDiscovery(),
+		DialTimeout: config.GetTimeoutForDiscovery(),
 	})
 	if err != nil {
 		logger.Fatal(err)

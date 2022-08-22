@@ -1,0 +1,8 @@
+global:
+  env: debug
+discovery:
+  endpoints:
+    - localhost:2379
+  timeout: 5
+ip_conf:
+  service_path: /plato/ip_dispatcher

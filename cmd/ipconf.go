@@ -15,5 +15,5 @@ var ipConfCmd = &cobra.Command{
 }
 
 func IpConfHandle(cmd *cobra.Command, args []string) {
-	ipconf.RunMain()
+	ipconf.RunMain(ConfigPath)
 }

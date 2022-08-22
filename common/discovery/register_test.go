@@ -8,9 +8,8 @@ import (
 )
 
 func TestServiceRegiste(t *testing.T) {
-	var endpoints = []string{"localhost:2379"}
 	ctx := context.Background()
-	ser, err := NewServiceRegister(&ctx, endpoints, "/web/node1", &EndpointInfo{
+	ser, err := NewServiceRegister(&ctx, "/web/node1", &EndpointInfo{
 		IP:   "127.0.0.1",
 		Port: "9999",
 	}, 5)

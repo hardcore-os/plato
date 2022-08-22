@@ -3,9 +3,9 @@ package discovery
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/bytedance/gopkg/util/logger"
+	"github.com/hardcore-os/plato/common/config"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -21,10 +21,10 @@ type ServiceRegister struct {
 }
 
 //NewServiceRegister 新建注册服务
-func NewServiceRegister(ctx *context.Context, endpoints []string, key string, endportinfo *EndpointInfo, lease int64) (*ServiceRegister, error) {
+func NewServiceRegister(ctx *context.Context, key string, endportinfo *EndpointInfo, lease int64) (*ServiceRegister, error) {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   endpoints,
-		DialTimeout: 5 * time.Second,
+		Endpoints:   config.GetEndpointsForDiscovery(),
+		DialTimeout: config.GetTimeoutForDiscovery(),
 	})
 	if err != nil {
 		log.Fatal(err)
