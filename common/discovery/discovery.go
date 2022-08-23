@@ -45,13 +45,13 @@ func (s *ServiceDiscovery) WatchService(prefix string, set, del func(key, value 
 		set(string(ev.Key), string(ev.Value))
 	}
 	//监视前缀，修改变更的server
-	s.watcher(prefix, set, del)
+	s.watcher(prefix, resp.Header.Revision+1, set, del)
 	return nil
 }
 
 //watcher 监听前缀
-func (s *ServiceDiscovery) watcher(prefix string, set, del func(key, value string)) {
-	rch := s.cli.Watch(*s.ctx, prefix, clientv3.WithPrefix())
+func (s *ServiceDiscovery) watcher(prefix string, rev int64, set, del func(key, value string)) {
+	rch := s.cli.Watch(*s.ctx, prefix, clientv3.WithPrefix(), clientv3.WithRev(rev))
 	logger.CtxInfof(*s.ctx, "watching prefix:%s now...", prefix)
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
