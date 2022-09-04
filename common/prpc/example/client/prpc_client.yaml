@@ -14,6 +14,6 @@ prpc:
   trace:
     enable: true
     url: http://127.0.0.1:14268/api/traces
-    service_name: plato
+    service_name: prpc_client
     sampler: 1.0
 
