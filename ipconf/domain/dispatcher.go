@@ -70,10 +70,17 @@ func (dp *Dispatcher) delNode(event *source.Event) {
 func (dp *Dispatcher) addNode(event *source.Event) {
 	dp.Lock()
 	defer dp.Unlock()
-	ed := NewEndport(event.IP, event.Port)
+	var (
+		ed *Endport
+		ok bool
+	)
+	if ed, ok = dp.candidateTable[event.Key()]; !ok { // 不存在
+		ed = NewEndport(event.IP, event.Port)
+		dp.candidateTable[event.Key()] = ed
+	}
 	ed.UpdateStat(&Stat{
 		ConnectNum:   event.ConnectNum,
 		MessageBytes: event.MessageBytes,
 	})
-	dp.candidateTable[event.Key()] = ed
+
 }

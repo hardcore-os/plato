@@ -16,4 +16,11 @@ prpc:
     url: http://127.0.0.1:14268/api/traces
     service_name: plato
     sampler: 1.0
+gateway:
+  tcp_max_num: 10000
+  epoll_channel_num: 100
+  epoll_num: 8
+  epoll_wait_queue_size: 100
+  server_port: 8900
+  worker_pool_num: 1024
 
