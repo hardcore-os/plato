@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gookit/color"
-	"github.com/hardcore-os/plato/client/sdk"
+	"github.com/hardcore-os/plato/common/sdk"
 	"github.com/rocket049/gocui"
 )
 

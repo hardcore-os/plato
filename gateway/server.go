@@ -1,7 +1,9 @@
 package gateway
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 
@@ -23,10 +25,14 @@ func RunMain(path string) {
 	select {}
 }
 
-func runProc(conn *net.TCPConn, ep *epoller) {
+func runProc(c *connection, ep *epoller) {
 	// step1: 读取一个完整的消息包
-	dataBuf, err := tcp.ReadData(conn)
+	dataBuf, err := tcp.ReadData(c.conn)
 	if err != nil {
+		// 如果读取conn时发现连接关闭，则直接端口连接
+		if errors.Is(err, io.EOF) {
+			ep.remove(c)
+		}
 		return
 	}
 	err = wPool.Submit(func() {
@@ -35,7 +41,7 @@ func runProc(conn *net.TCPConn, ep *epoller) {
 			Len:  uint32(len(dataBuf)),
 			Data: dataBuf,
 		}
-		tcp.SendData(conn, bytes.Marshal())
+		tcp.SendData(c.conn, bytes.Marshal())
 	})
 	if err != nil {
 		fmt.Errorf("runProc:err:%+v\n", err.Error())

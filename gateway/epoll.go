@@ -17,29 +17,32 @@ import (
 // 全局对象
 var ep *ePool    // epoll池
 var tcpNum int32 // 当前服务允许接入的最大tcp连接数
+
 type ePool struct {
-	eChan chan *net.TCPConn
-	eSize int
-	done  chan struct{}
+	eChan  chan *connection
+	tables sync.Map
+	eSize  int
+	done   chan struct{}
 
 	ln *net.TCPListener
-	f  func(c *net.TCPConn, ep *epoller)
+	f  func(c *connection, ep *epoller)
 }
 
-func initEpoll(ln *net.TCPListener, f func(c *net.TCPConn, ep *epoller)) {
+func initEpoll(ln *net.TCPListener, f func(c *connection, ep *epoller)) {
 	setLimit()
 	ep = newEPool(ln, f)
 	ep.createAcceptProcess()
 	ep.startEPool()
 }
 
-func newEPool(ln *net.TCPListener, cb func(c *net.TCPConn, ep *epoller)) *ePool {
+func newEPool(ln *net.TCPListener, cb func(c *connection, ep *epoller)) *ePool {
 	return &ePool{
-		eChan: make(chan *net.TCPConn, config.GetGatewayEpollerChanNum()),
-		done:  make(chan struct{}),
-		eSize: config.GetGatewayEpollerNum(),
-		ln:    ln,
-		f:     cb,
+		eChan:  make(chan *connection, config.GetGatewayEpollerChanNum()),
+		done:   make(chan struct{}),
+		eSize:  config.GetGatewayEpollerNum(),
+		tables: sync.Map{},
+		ln:     ln,
+		f:      cb,
 	}
 }
 
@@ -62,7 +65,11 @@ func (e *ePool) createAcceptProcess() {
 					}
 					fmt.Errorf("accept err: %v", e)
 				}
-				ep.addTask(conn)
+				c := connection{
+					conn: conn,
+					fd:   socketFD(conn),
+				}
+				ep.addTask(&c)
 			}
 		}()
 	}
@@ -91,10 +98,10 @@ func (e *ePool) startEProc() {
 				fmt.Printf("tcpNum:%d\n", tcpNum)
 				if err := ep.add(conn); err != nil {
 					fmt.Printf("failed to add connection %v\n", err)
-					_ = conn.Close() //登录未成功直接关闭连接
+					conn.Close() //登录未成功直接关闭连接
 					continue
 				}
-				fmt.Printf("EpollerPool new connection[%v] tcpSize:%d\n", (conn).RemoteAddr().String(), tcpNum)
+				fmt.Printf("EpollerPool new connection[%v] tcpSize:%d\n", conn.RemoteAddr(), tcpNum)
 			}
 		}
 	}()
@@ -104,7 +111,7 @@ func (e *ePool) startEProc() {
 		case <-e.done:
 			return
 		default:
-			connections, err := ep.Wait(200) // 200ms 一次轮询避免 忙轮询
+			connections, err := ep.wait(200) // 200ms 一次轮询避免 忙轮询
 
 			if err != nil && err != syscall.EINTR {
 				fmt.Printf("failed to epoll wait %v\n", err)
@@ -119,14 +126,14 @@ func (e *ePool) startEProc() {
 		}
 	}
 }
-func (e *ePool) addTask(c *net.TCPConn) {
+
+func (e *ePool) addTask(c *connection) {
 	e.eChan <- c
 }
 
 // epoller 对象 轮询器
 type epoller struct {
-	fd          int
-	connections sync.Map
+	fd int
 }
 
 func newEpoller() (*epoller, error) {
@@ -135,43 +142,41 @@ func newEpoller() (*epoller, error) {
 		return nil, err
 	}
 	return &epoller{
-		fd:          fd,
-		connections: sync.Map{},
+		fd: fd,
 	}, nil
 }
 
 // TODO: 默认水平触发模式,可采用非阻塞FD,优化边沿触发模式
-func (e *epoller) add(conn *net.TCPConn) error {
+func (e *epoller) add(conn *connection) error {
 	// Extract file descriptor associated with the connection
-	fd := socketFD(conn)
+	fd := conn.fd
 	err := unix.EpollCtl(e.fd, syscall.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Events: unix.EPOLLIN | unix.EPOLLHUP, Fd: int32(fd)})
 	if err != nil {
 		return err
 	}
-	e.connections.Store(fd, conn)
+	ep.tables.Store(fd, conn)
 	return nil
 }
-func (e *epoller) Remove(conn *net.TCPConn) error {
+func (e *epoller) remove(c *connection) error {
 	subTcpNum()
-	fd := socketFD(conn)
+	fd := c.fd
 	err := unix.EpollCtl(e.fd, syscall.EPOLL_CTL_DEL, fd, nil)
 	if err != nil {
 		return err
 	}
-	e.connections.Delete(fd)
+	ep.tables.Delete(fd)
 	return nil
 }
-func (e *epoller) Wait(msec int) ([]*net.TCPConn, error) {
+func (e *epoller) wait(msec int) ([]*connection, error) {
 	events := make([]unix.EpollEvent, config.GetGatewayEpollWaitQueueSize())
 	n, err := unix.EpollWait(e.fd, events, msec)
 	if err != nil {
 		return nil, err
 	}
-	var connections []*net.TCPConn
+	var connections []*connection
 	for i := 0; i < n; i++ {
-		//log.Printf("event:%+v\n", events[i])
-		if conn, ok := e.connections.Load(int(events[i].Fd)); ok {
-			connections = append(connections, conn.(*net.TCPConn))
+		if conn, ok := ep.tables.Load(int(events[i].Fd)); ok {
+			connections = append(connections, conn.(*connection))
 		}
 	}
 	return connections, nil

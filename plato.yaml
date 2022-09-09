@@ -17,7 +17,7 @@ prpc:
     service_name: plato
     sampler: 1.0
 gateway:
-  tcp_max_num: 10000
+  tcp_max_num: 70000
   epoll_channel_num: 100
   epoll_num: 8
   epoll_wait_queue_size: 100

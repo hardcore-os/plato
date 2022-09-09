@@ -13,11 +13,7 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(
-		&ConfigPath,
-		"config",
-		"./plato.yaml",
-		"config file (default is ./plato.yaml)")
+	rootCmd.PersistentFlags().StringVar(&ConfigPath, "config", "./plato.yaml", "config file (default is ./plato.yaml)")
 }
 
 var rootCmd = &cobra.Command{

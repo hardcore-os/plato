@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 
 	"github.com/hardcore-os/plato/common/tcp"
@@ -20,20 +21,18 @@ func newConnet(ip net.IP, port int) *connect {
 	addr := &net.TCPAddr{IP: ip, Port: port}
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		panic(err)
+		fmt.Printf("DialTCP.err=%+v", err)
+		return nil
 	}
 	clientConn.conn = conn
 	go func() {
 		for {
 			data, err := tcp.ReadData(conn)
 			if err != nil {
-				panic(err)
+				fmt.Printf("ReadData err:%+v", err)
 			}
 			msg := &Message{}
-			err = json.Unmarshal(data, msg)
-			if err != nil {
-				panic(err)
-			}
+			json.Unmarshal(data, msg)
 			clientConn.recvChan <- msg
 		}
 	}()
