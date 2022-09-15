@@ -75,12 +75,13 @@ require (
 	go.opentelemetry.io/otel/exporters/jaeger v1.9.0
 	go.opentelemetry.io/otel/sdk v1.9.0
 	go.opentelemetry.io/otel/trace v1.9.0
-	go.uber.org/zap v1.22.0 // indirect
+	go.uber.org/zap v1.22.0
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/grpc v1.48.0
 	gopkg.in/ini.v1 v1.66.4 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
