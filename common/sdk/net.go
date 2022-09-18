@@ -32,7 +32,10 @@ func newConnet(ip net.IP, port int) *connect {
 				fmt.Printf("ReadData err:%+v", err)
 			}
 			msg := &Message{}
-			json.Unmarshal(data, msg)
+			err = json.Unmarshal(data, msg)
+			if err != nil {
+				panic(err)
+			}
 			clientConn.recvChan <- msg
 		}
 	}()

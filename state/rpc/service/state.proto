@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "./;service";
+
+package service;
+// 网关机的 rpc server定义
+// cd state/rpc 下 执行 protoc -I service --go_out=plugins=grpc:service service/state.proto
+service state {
+    rpc CancelConn (StateRequest) returns (StateResponse);
+    rpc SendMsg (StateRequest) returns (StateResponse);
+}
+  
+message StateRequest{
+    string endpoint = 1;
+    int32 fd = 2;
+    bytes data = 3;
+}
+  
+message StateResponse {
+    int32 code = 1;
+    string msg = 2;
+}

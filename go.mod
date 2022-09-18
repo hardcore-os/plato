@@ -25,9 +25,9 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
-	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
+	google.golang.org/genproto v0.0.0-20220915135415-7fd63a7952de // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 )
 
 require (
@@ -77,7 +77,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.9.0
 	go.uber.org/zap v1.22.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/sys v0.0.0-20220915200043-7b5979e65e41
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/grpc v1.48.0
 	gopkg.in/ini.v1 v1.66.4 // indirect
