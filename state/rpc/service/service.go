@@ -2,7 +2,6 @@ package service
 
 import (
 	context "context"
-	"fmt"
 )
 
 const (
@@ -14,8 +13,8 @@ type CmdContext struct {
 	Ctx      *context.Context
 	Cmd      int32
 	Endpoint string
-	FD       int
-	Playload []byte
+	ConnID   uint64
+	Payload  []byte
 }
 
 type Service struct {
@@ -27,7 +26,7 @@ func (s *Service) CancelConn(ctx context.Context, sr *StateRequest) (*StateRespo
 	s.CmdChannel <- &CmdContext{
 		Ctx:      &c,
 		Cmd:      CancelConnCmd,
-		FD:       int(sr.GetFd()),
+		ConnID:   sr.ConnID,
 		Endpoint: sr.GetEndpoint(),
 	}
 	return &StateResponse{
@@ -37,16 +36,14 @@ func (s *Service) CancelConn(ctx context.Context, sr *StateRequest) (*StateRespo
 }
 
 func (s *Service) SendMsg(ctx context.Context, sr *StateRequest) (*StateResponse, error) {
-	fmt.Println("state.SendMsg.ok")
 	c := context.TODO()
 	s.CmdChannel <- &CmdContext{
 		Ctx:      &c,
 		Cmd:      SendMsgCmd,
-		FD:       int(sr.GetFd()),
+		ConnID:   sr.ConnID,
 		Endpoint: sr.GetEndpoint(),
-		Playload: sr.GetData(),
+		Payload:  sr.GetData(),
 	}
-	fmt.Println("state.SendMsg.okk")
 	return &StateResponse{
 		Code: 0,
 		Msg:  "success",

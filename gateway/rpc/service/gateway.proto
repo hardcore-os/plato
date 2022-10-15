@@ -11,7 +11,7 @@ service Gateway {
 }
 
 message GatewayRequest{
-  int32 fd = 1;
+  uint64 connID = 1;
   bytes data = 2;
 }
 

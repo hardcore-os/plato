@@ -65,11 +65,8 @@ func (e *ePool) createAcceptProcess() {
 					}
 					fmt.Errorf("accept err: %v", e)
 				}
-				c := connection{
-					conn: conn,
-					fd:   socketFD(conn),
-				}
-				ep.addTask(&c)
+				c := NewConnection(conn)
+				ep.addTask(c)
 			}
 		}()
 	}
@@ -112,7 +109,6 @@ func (e *ePool) startEProc() {
 			return
 		default:
 			connections, err := ep.wait(200) // 200ms 一次轮询避免 忙轮询
-
 			if err != nil && err != syscall.EINTR {
 				fmt.Printf("failed to epoll wait %v\n", err)
 				continue
@@ -133,7 +129,8 @@ func (e *ePool) addTask(c *connection) {
 
 // epoller 对象 轮询器
 type epoller struct {
-	fd int
+	fd            int
+	fdToConnTable sync.Map
 }
 
 func newEpoller() (*epoller, error) {
@@ -154,7 +151,9 @@ func (e *epoller) add(conn *connection) error {
 	if err != nil {
 		return err
 	}
-	ep.tables.Store(fd, conn)
+	e.fdToConnTable.Store(conn.fd, conn)
+	ep.tables.Store(conn.id, conn)
+	conn.BindEpoller(e)
 	return nil
 }
 func (e *epoller) remove(c *connection) error {
@@ -164,7 +163,8 @@ func (e *epoller) remove(c *connection) error {
 	if err != nil {
 		return err
 	}
-	ep.tables.Delete(fd)
+	ep.tables.Delete(c.id)
+	e.fdToConnTable.Delete(c.fd)
 	return nil
 }
 func (e *epoller) wait(msec int) ([]*connection, error) {
@@ -175,7 +175,7 @@ func (e *epoller) wait(msec int) ([]*connection, error) {
 	}
 	var connections []*connection
 	for i := 0; i < n; i++ {
-		if conn, ok := ep.tables.Load(int(events[i].Fd)); ok {
+		if conn, ok := e.fdToConnTable.Load(int(events[i].Fd)); ok {
 			connections = append(connections, conn.(*connection))
 		}
 	}

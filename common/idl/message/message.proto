@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option go_package = "./;message";
+
+package message;
+// cd common/idl; protoc -I message  --go_out=plugins=grpc:message  message/message.proto
+enum CmdType { //枚举消息类型
+    Login = 0;
+    Heartbeat = 1;
+    ReConn = 2;
+    ACK = 3;
+}
+
+// 顶层cmd pb结构
+message MsgCmd{
+   CmdType Type = 1;
+   bytes Payload = 2;
+}
+// ACK 消息
+message ACKMsg {
+    uint32 Code = 1;
+    string Msg = 2; 
+    CmdType Type = 3;
+    uint64 ConnID = 4;
+}
+
+// 登陆消息
+message LoginMsgHead {
+     uint64 DeviceID = 1;
+}
+
+message LoginMsg {
+   LoginMsgHead Head = 1;
+   bytes LoginMsgBody = 2;
+}
+
+
+
+// 心跳消息
+message HeartbeatMsgHead {
+}
+
+message HeartbeatMsg {
+  HeartbeatMsgHead Head = 1;
+  bytes HeartbeatMsgBody = 2;
+}
+
+// 重连消息
+message ReConnMsgHead {
+    uint64 ConnID = 1;
+}
+
+message ReConnMsg {
+    ReConnMsgHead Head = 1;
+    bytes ReConnMsgBody = 2;
+}

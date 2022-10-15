@@ -21,7 +21,7 @@ gateway:
   service_addr: "127.0.0.1"
   tcp_max_num: 70000
   epoll_channel_num: 100
-  epoll_num: 8
+  epoll_num: 4
   epoll_wait_queue_size: 100
   tcp_server_port: 8900
   rpc_server_port: 8901

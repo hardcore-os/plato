@@ -20,15 +20,15 @@ func initGatewayClient() {
 	gatewayClient = service.NewGatewayClient(pCli.Conn())
 }
 
-func DelConn(ctx *context.Context, fd int32, playLoad []byte) error {
+func DelConn(ctx *context.Context, connID uint64, Payload []byte) error {
 	rpcCtx, _ := context.WithTimeout(*ctx, 100*time.Millisecond)
-	gatewayClient.DelConn(rpcCtx, &service.GatewayRequest{Fd: fd, Data: playLoad})
+	gatewayClient.DelConn(rpcCtx, &service.GatewayRequest{ConnID: connID, Data: Payload})
 	return nil
 }
 
-func Push(ctx *context.Context, fd int32, playLoad []byte) error {
+func Push(ctx *context.Context, connID uint64, Payload []byte) error {
 	rpcCtx, _ := context.WithTimeout(*ctx, 100*time.Second)
-	resp, err := gatewayClient.Push(rpcCtx, &service.GatewayRequest{Fd: fd, Data: playLoad})
+	resp, err := gatewayClient.Push(rpcCtx, &service.GatewayRequest{ConnID: connID, Data: Payload})
 	if err != nil {
 		fmt.Println(err)
 	}
