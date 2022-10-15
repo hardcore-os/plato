@@ -2,7 +2,6 @@ package service
 
 import (
 	context "context"
-	"fmt"
 )
 
 const (
@@ -37,7 +36,6 @@ func (s *Service) CancelConn(ctx context.Context, sr *StateRequest) (*StateRespo
 }
 
 func (s *Service) SendMsg(ctx context.Context, sr *StateRequest) (*StateResponse, error) {
-	fmt.Println("state.SendMsg.ok")
 	c := context.TODO()
 	s.CmdChannel <- &CmdContext{
 		Ctx:      &c,
@@ -46,7 +44,6 @@ func (s *Service) SendMsg(ctx context.Context, sr *StateRequest) (*StateResponse
 		Endpoint: sr.GetEndpoint(),
 		Payload:  sr.GetData(),
 	}
-	fmt.Println("state.SendMsg.okk")
 	return &StateResponse{
 		Code: 0,
 		Msg:  "success",

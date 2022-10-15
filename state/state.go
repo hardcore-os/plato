@@ -14,7 +14,7 @@ var cmdChannel chan *service.CmdContext
 var connToStateTable sync.Map
 
 type connState struct {
-	*sync.RWMutex
+	sync.RWMutex
 	heartTimer  *timingwheel.Timer
 	reConnTimer *timingwheel.Timer
 	connID      uint64
@@ -24,7 +24,7 @@ func (c *connState) reSetHeartTimer() {
 	c.Lock()
 	defer c.Unlock()
 	c.heartTimer.Stop()
-	c.heartTimer = AfterFunc(300*time.Second, func() {
+	c.heartTimer = AfterFunc(5*time.Second, func() {
 		clearState(c.connID)
 	})
 }

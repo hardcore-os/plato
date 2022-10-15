@@ -10,7 +10,7 @@ import (
 	"github.com/hardcore-os/plato/common/prpc"
 	"google.golang.org/protobuf/proto"
 
-	idl "github.com/hardcore-os/plato/common/idl/state"
+	"github.com/hardcore-os/plato/common/idl/message"
 	"github.com/hardcore-os/plato/state/rpc/client"
 	"github.com/hardcore-os/plato/state/rpc/service"
 	"google.golang.org/grpc"
@@ -46,7 +46,7 @@ func cmdHandler() {
 			fmt.Printf("cancelconn endpoint:%s, fd:%d, data:%+v", cmdCtx.Endpoint, cmdCtx.ConnID, cmdCtx.Payload)
 		case service.SendMsgCmd:
 			fmt.Println("cmdHandler", string(cmdCtx.Payload))
-			msgCmd := &idl.MsgCmd{}
+			msgCmd := &message.MsgCmd{}
 			err := proto.Unmarshal(cmdCtx.Payload, msgCmd)
 			if err != nil {
 				fmt.Printf("SendMsgCmd:err=%s\n", err.Error())
@@ -56,19 +56,19 @@ func cmdHandler() {
 	}
 }
 
-func msgCmdHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
+func msgCmdHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
 	switch msgCmd.Type {
-	case idl.CmdType_Login:
+	case message.CmdType_Login:
 		loginMsgHandler(cmdCtx, msgCmd)
-	case idl.CmdType_Heartbeat:
+	case message.CmdType_Heartbeat:
 		hearbeatMsgHandler(cmdCtx, msgCmd)
-	case idl.CmdType_ReConn:
+	case message.CmdType_ReConn:
 		reConnMsgHandler(cmdCtx, msgCmd)
 	}
 }
 
-func reConnMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
-	reConnMsg := &idl.ReConnMsg{}
+func reConnMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
+	reConnMsg := &message.ReConnMsg{}
 	err := proto.Unmarshal(msgCmd.Payload, reConnMsg)
 	if err != nil {
 		fmt.Printf("reConnMsgHandler:err=%s\n", err.Error())
@@ -91,12 +91,12 @@ func reConnMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
 		connToStateTable.Store(cmdCtx.ConnID, state)
 		sendACKMsg(cmdCtx.ConnID, 0, "reconn ok")
 	} else {
-		sendACKMsg(cmdCtx.ConnID, 1, "reconn feailed")
+		sendACKMsg(cmdCtx.ConnID, 1, "reconn failed")
 	}
 }
 
-func hearbeatMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
-	heartMsg := &idl.HeartbeatMsg{}
+func hearbeatMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
+	heartMsg := &message.HeartbeatMsg{}
 	err := proto.Unmarshal(msgCmd.Payload, heartMsg)
 	if err != nil {
 		fmt.Printf("hearbeatMsgHandler:err=%s\n", err.Error())
@@ -109,8 +109,8 @@ func hearbeatMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
 	// 未减少通信量，可以暂时不回复心跳的ack
 }
 
-func loginMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
-	loginMsg := &idl.LoginMsg{}
+func loginMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
+	loginMsg := &message.LoginMsg{}
 	err := proto.Unmarshal(msgCmd.Payload, loginMsg)
 	if err != nil {
 		fmt.Printf("loginMsgHandler:err=%s\n", err.Error())
@@ -126,15 +126,24 @@ func loginMsgHandler(cmdCtx *service.CmdContext, msgCmd *idl.MsgCmd) {
 	})
 	// 初始化连接的状态
 	connToStateTable.Store(cmdCtx.ConnID, &connState{heartTimer: t, connID: cmdCtx.ConnID})
+	sendACKMsg(cmdCtx.ConnID, 0, "login")
 }
 func sendACKMsg(connID uint64, code uint32, msg string) {
-	ackMsg := &idl.ACKMsg{}
+	ackMsg := &message.ACKMsg{}
 	ackMsg.Code = code
 	ackMsg.Msg = msg
+	ackMsg.ConnID = connID
 	ctx := context.TODO()
 	downLoad, err := proto.Marshal(ackMsg)
 	if err != nil {
 		fmt.Println("sendACKMsg", err)
 	}
-	client.Push(&ctx, connID, downLoad)
+	mc := &message.MsgCmd{}
+	mc.Type = message.CmdType_ACK
+	mc.Payload = downLoad
+	data, err := proto.Marshal(mc)
+	if err != nil {
+		fmt.Println("sendACKMsg", err)
+	}
+	client.Push(&ctx, connID, data)
 }

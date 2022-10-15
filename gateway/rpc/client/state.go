@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hardcore-os/plato/common/config"
@@ -31,6 +32,7 @@ func CancelConn(ctx *context.Context, endpoint string, connID uint64, Payload []
 
 func SendMsg(ctx *context.Context, endpoint string, connID uint64, Payload []byte) error {
 	rpcCtx, _ := context.WithTimeout(*ctx, 100*time.Millisecond)
+	fmt.Println("sendMsg", connID, string(Payload))
 	_, err := stateClient.SendMsg(rpcCtx, &service.StateRequest{
 		Endpoint: endpoint,
 		ConnID:   connID,

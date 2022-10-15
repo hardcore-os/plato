@@ -1,19 +1,21 @@
 package sdk
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/hardcore-os/plato/common/idl/message"
 	"github.com/hardcore-os/plato/common/tcp"
 )
 
 type connect struct {
 	sendChan, recvChan chan *Message
 	conn               *net.TCPConn
+	connID             uint64
 }
 
-func newConnet(ip net.IP, port int) *connect {
+func newConnet(ip net.IP, port int, connID uint64) *connect {
 	clientConn := &connect{
 		sendChan: make(chan *Message),
 		recvChan: make(chan *Message),
@@ -25,32 +27,43 @@ func newConnet(ip net.IP, port int) *connect {
 		return nil
 	}
 	clientConn.conn = conn
-	go func() {
-		for {
-			data, err := tcp.ReadData(conn)
-			if err != nil {
-				fmt.Printf("ReadData err:%+v", err)
-			}
-			msg := &Message{}
-			err = json.Unmarshal(data, msg)
-			if err != nil {
-				panic(err)
-			}
-			clientConn.recvChan <- msg
-		}
-	}()
+	if connID != 0 {
+		clientConn.connID = connID
+	}
 	return clientConn
 }
 
-func (c *connect) send(data *Message) {
-	// 直接发送给接收方
-	bytes, _ := json.Marshal(data)
-	dataPgk := tcp.DataPgk{
-		Data: bytes,
-		Len:  uint32(len(bytes)),
+func handAckMsg(c *connect, data []byte) *Message {
+	ackMsg := &message.ACKMsg{}
+	proto.Unmarshal(data, ackMsg)
+	switch ackMsg.Type {
+	case message.CmdType_Login:
+		c.connID = ackMsg.ConnID
 	}
-	xx := dataPgk.Marshal()
-	c.conn.Write(xx)
+	return &Message{
+		Type:       MsgTypeAck,
+		Name:       "plato",
+		FormUserID: "1212121",
+		ToUserID:   "222212122",
+		Content:    ackMsg.Msg,
+	}
+}
+
+func (c *connect) send(ty message.CmdType, palyload []byte) {
+	// 直接发送给接收方
+	msgCmd := message.MsgCmd{
+		Type:    ty,
+		Payload: palyload,
+	}
+	msg, err := proto.Marshal(&msgCmd)
+	if err != nil {
+		panic(err)
+	}
+	dataPgk := tcp.DataPgk{
+		Data: msg,
+		Len:  uint32(len(msg)),
+	}
+	c.conn.Write(dataPgk.Marshal())
 }
 
 func (c *connect) recv() <-chan *Message {

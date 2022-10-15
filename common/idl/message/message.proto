@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-option go_package = "./;pb";
+option go_package = "./;message";
 
-package pb;
-// cd common/idl; protoc -I state  --go_out=plugins=grpc:state  state/state.proto
+package message;
+// cd common/idl; protoc -I message  --go_out=plugins=grpc:message  message/message.proto
 enum CmdType { //枚举消息类型
     Login = 0;
     Heartbeat = 1;
@@ -16,7 +16,13 @@ message MsgCmd{
    CmdType Type = 1;
    bytes Payload = 2;
 }
-
+// ACK 消息
+message ACKMsg {
+    uint32 Code = 1;
+    string Msg = 2; 
+    CmdType Type = 3;
+    uint64 ConnID = 4;
+}
 
 // 登陆消息
 message LoginMsgHead {
@@ -28,11 +34,6 @@ message LoginMsg {
    bytes LoginMsgBody = 2;
 }
 
-// ACK 消息
-message ACKMsg {
-    uint32 code = 1;
-    string msg = 2; 
-}
 
 
 // 心跳消息
