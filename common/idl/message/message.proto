@@ -9,19 +9,40 @@ enum CmdType { //枚举消息类型
     Heartbeat = 1;
     ReConn = 2;
     ACK = 3;
+    UP = 4; // 上行消息
+    Push = 5; // 下行 推送消息
 }
+
 
 // 顶层cmd pb结构
 message MsgCmd{
    CmdType Type = 1;
    bytes Payload = 2;
 }
+
+// 上行消息 pb结构
+message UPMsg{
+    UPMsgHead Head = 1;
+    bytes UPMsgBody = 2;
+ }
+ 
+ // 上行消息头 pb结构
+message UPMsgHead{
+    uint64 ClientID = 1;
+    uint64 ConnID = 2;
+ }
+
+ message PushMsg{
+     uint64 MsgID   = 1;
+     bytes  Content = 2;
+ }
 // ACK 消息
 message ACKMsg {
     uint32 Code = 1;
     string Msg = 2; 
     CmdType Type = 3;
     uint64 ConnID = 4;
+    uint64 ClientID = 5;
 }
 
 // 登陆消息

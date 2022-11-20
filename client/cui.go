@@ -64,7 +64,14 @@ func viewPrint(g *gocui.Gui, name, msg string, newline bool) {
 func doRecv(g *gocui.Gui) {
 	recvChannel := chat.Recv()
 	for msg := range recvChannel {
-		viewPrint(g, msg.Name, msg.Content, false)
+		if msg != nil {
+			switch msg.Type {
+			case sdk.MsgTypeText:
+				viewPrint(g, msg.Name, msg.Content, false)
+			case sdk.MsgTypeAck:
+				//TODO 默认不处理
+			}
+		}
 	}
 }
 
@@ -220,7 +227,7 @@ func pasteDown(g *gocui.Gui, cv *gocui.View) error {
 
 func RunMain() {
 	// step1 创建chat的核心对象
-	chat = sdk.NewChat(net.ParseIP("0.0.0.0"), 8900, "logic", "12312321", "2131", 0, false)
+	chat = sdk.NewChat(net.ParseIP("0.0.0.0"), 8900, "logic", "12312321", "2131")
 	// step2 创建 GUI 图层对象并进行参与与回调函数的配置
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -255,13 +262,8 @@ func RunMain() {
 	}
 	go func() {
 		time.Sleep(10 * time.Second)
-		// 模拟一次断线
-		chat.Close()
-		time.Sleep(3 * time.Second)
-		connID := chat.GetConnID()
 		// 重新连接
-		chat = sdk.NewChat(net.ParseIP("0.0.0.0"), 8900, "logic", "12312321", "2131", connID, true)
-		go doRecv(g)
+		chat.ReConn()
 	}()
 	// 启动消费函数
 	go doRecv(g)
