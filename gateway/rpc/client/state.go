@@ -17,7 +17,11 @@ func initStateClient() {
 	if err != nil {
 		panic(err)
 	}
-	stateClient = service.NewStateClient(pCli.Conn())
+	cli, err := pCli.DialByEndPoint(config.GetGatewayStateServerEndPoint())
+	if err != nil {
+		panic(err)
+	}
+	stateClient = service.NewStateClient(cli)
 }
 
 func CancelConn(ctx *context.Context, endpoint string, connID uint64, Payload []byte) error {

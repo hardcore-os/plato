@@ -76,3 +76,19 @@ func (p *PClient) dial() (*grpc.ClientConn, error) {
 
 	return grpc.DialContext(ctx, fmt.Sprintf("discov:///%v", p.serviceName), options...)
 }
+
+func (p *PClient) DialByEndPoint(adrss string) (*grpc.ClientConn, error) {
+	interceptors := []grpc.UnaryClientInterceptor{
+		clientinterceptor.TraceUnaryClientInterceptor(),
+		clientinterceptor.MetricUnaryClientInterceptor(),
+	}
+	interceptors = append(interceptors, p.interceptors...)
+
+	options := []grpc.DialOption{
+		grpc.WithChainUnaryInterceptor(interceptors...),
+		grpc.WithInsecure(),
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), dialTimeout)
+	return grpc.DialContext(ctx, adrss, options...)
+}
