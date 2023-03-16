@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 func GetGatewayMaxTcpNum() int32 {
 	return viper.GetInt32("gateway.tcp_max_num")
@@ -38,4 +40,8 @@ func GetGatewayServiceName() string {
 
 func GetGatewayRPCWeight() int {
 	return viper.GetInt("gateway.weight")
+}
+
+func GetGatewayStateServerEndPoint() string {
+	return viper.GetString("gateway.state_server_endpoint")
 }
