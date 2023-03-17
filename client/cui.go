@@ -95,7 +95,8 @@ func doSay(g *gocui.Gui, cv *gocui.View) {
 				ToUserID:   "222222",
 				Content:    string(p)}
 			// 先把自己说的话显示到消息流中
-			viewPrint(g, "me", msg.Content, false)
+			idKey := fmt.Sprintf("%d", chat.GetCurClientID())
+			viewPrint(g, "me:"+idKey, msg.Content, false)
 			chat.Send(msg)
 		}
 		v.Autoscroll = true

@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -54,15 +55,24 @@ func NewChat(ip net.IP, port int, nick, userID, sessionID string) *Chat {
 }
 func (chat *Chat) Send(msg *Message) {
 	data, _ := json.Marshal(msg)
+	key := fmt.Sprintf("%d", chat.conn.connID)
 	upMsg := &message.UPMsg{
 		Head: &message.UPMsgHead{
-			ClientID: chat.getClientID(msg.Session),
+			ClientID: chat.getClientID(key),
 			ConnID:   chat.conn.connID,
 		},
 		UPMsgBody: data,
 	}
 	palyload, _ := proto.Marshal(upMsg)
 	chat.conn.send(message.CmdType_UP, palyload)
+}
+
+func (chat *Chat) GetCurClientID() uint64 {
+	key := fmt.Sprintf("%d", chat.conn.connID)
+	if id, ok := chat.MsgClientIDTable[key]; ok {
+		return id
+	}
+	return 0
 }
 
 //Close close chat
@@ -121,8 +131,7 @@ func (chat *Chat) getClientID(sessionID string) uint64 {
 	if id, ok := chat.MsgClientIDTable[sessionID]; ok {
 		res = id
 	}
-	res++
-	chat.MsgClientIDTable[sessionID] = res
+	chat.MsgClientIDTable[sessionID] = res + 1
 	return res
 }
 
@@ -154,6 +163,10 @@ func (chat *Chat) reConn() {
 
 func (chat *Chat) heartbeat() {
 	tc := time.NewTicker(1 * time.Second)
+	defer func() {
+		chat.heartbeat()
+	}()
+loop:
 	for {
 		select {
 		case <-chat.closeChan:
@@ -166,7 +179,10 @@ func (chat *Chat) heartbeat() {
 			if err != nil {
 				panic(err)
 			}
-			chat.conn.send(message.CmdType_Heartbeat, palyload)
+			err = chat.conn.send(message.CmdType_Heartbeat, palyload)
+			if err != nil {
+				goto loop
+			}
 		}
 	}
 }

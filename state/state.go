@@ -2,80 +2,162 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/hardcore-os/plato/common/idl/message"
+	"github.com/hardcore-os/plato/common/cache"
+	"github.com/hardcore-os/plato/common/router"
 	"github.com/hardcore-os/plato/common/timingwheel"
 	"github.com/hardcore-os/plato/state/rpc/client"
-	"github.com/hardcore-os/plato/state/rpc/service"
 )
-
-var cmdChannel chan *service.CmdContext
-var connToStateTable sync.Map
 
 type connState struct {
 	sync.RWMutex
-	heartTimer  *timingwheel.Timer
-	reConnTimer *timingwheel.Timer
-	msgTimer    *timingwheel.Timer
-	connID      uint64
-	maxClientID uint64
-	msgID       uint64 // test专用
+	heartTimer   *timingwheel.Timer
+	reConnTimer  *timingwheel.Timer
+	msgTimer     *timingwheel.Timer
+	msgTimerLock string
+	connID       uint64
+	did          uint64
 }
 
-// 这里可以考虑设计成无锁的并发模式
-func (c *connState) checkUPMsg(clientID uint64) bool {
+func (c *connState) close(ctx context.Context) error {
 	c.Lock()
 	defer c.Unlock()
-	if c.maxClientID+1 == clientID {
-		return true
+	if c.heartTimer != nil {
+		c.heartTimer.Stop()
 	}
-	return false
+	if c.reConnTimer != nil {
+		c.reConnTimer.Stop()
+	}
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+	}
+	// TODO 这里如何保证事务性，值得思考一下，或者说有没有必要保证
+	// TODO 这里也可以使用lua或者pipeline 来尽可能合并两次redis的操作 通常在大规模的应用中这是有效的
+	// TODO 这里是要好好思考一下，网络调用次数的时间&空间复杂度的
+	slotKey := cs.getLoginSlotKey(c.connID)
+	meta := cs.loginSlotMarshal(c.did, c.connID)
+	err := cache.SREM(ctx, slotKey, meta)
+	if err != nil {
+		return err
+	}
+
+	slot := cs.getConnStateSlot(c.connID)
+
+	key := fmt.Sprintf(cache.MaxClientIDKey, slot, c.connID)
+	err = cache.Del(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	err = router.DelRecord(ctx, c.did)
+	if err != nil {
+		return err
+	}
+
+	lastMsg := fmt.Sprintf(cache.LastMsgKey, slot, c.connID)
+	err = cache.Del(ctx, lastMsg)
+	if err != nil {
+		return err
+	}
+
+	err = client.DelConn(&ctx, c.connID, nil)
+	if err != nil {
+		return err
+	}
+
+	cs.deleteConnIDState(ctx, c.connID)
+	return nil
 }
 
-// 这里可以考虑设计成无锁的并发模式
-func (c *connState) addMaxClientID() {
-	c.Lock()         // 不要迷恋原子操作，如果锁的临界区很小，性能与原子操作相差无己并发性能瓶颈，保持简单可靠即可。
-	defer c.Unlock() // go的读写锁本身就有自旋等无锁优化
-	c.maxClientID++
+func (c *connState) appendMsg(ctx context.Context, key, msgTimerLock string, msgData []byte) {
+	c.Lock()
+	defer c.Unlock()
+	c.msgTimerLock = msgTimerLock
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+		c.msgTimer = nil
+	}
+	// 创建定时器
+	t := AfterFunc(100*time.Millisecond, func() {
+		rePush(c.connID)
+	})
+	c.msgTimer = t
+	err := cache.SetBytes(ctx, key, msgData, cache.TTL7D)
+	if err != nil {
+		panic(key)
+	}
+}
+
+func (c *connState) reSetMsgTimer(connID, sessionID, msgID uint64) {
+	c.Lock()
+	defer c.Unlock()
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+	}
+	c.msgTimerLock = fmt.Sprintf("%d_%d", sessionID, msgID)
+	c.msgTimer = AfterFunc(100*time.Millisecond, func() {
+		rePush(connID)
+	})
+}
+
+// 用来重启时恢复
+func (c *connState) loadMsgTimer(ctx context.Context) {
+	// 创建定时器
+	data, err := cs.getLastMsg(ctx, c.connID)
+	if err != nil {
+		// 这里的处理是粗暴的，如果线上是需要更sloid的方案
+		panic(err)
+	}
+	if data == nil {
+		return
+	}
+	c.reSetMsgTimer(c.connID, data.SessionID, data.MsgID)
 }
 
 func (c *connState) reSetHeartTimer() {
 	c.Lock()
 	defer c.Unlock()
-	c.heartTimer.Stop()
+	if c.heartTimer != nil {
+		c.heartTimer.Stop()
+	}
 	c.heartTimer = AfterFunc(5*time.Second, func() {
-		clearState(c.connID)
+		c.reSetReConnTimer()
 	})
 }
 
-// 为了实现重连，这里不要立即释放连接的状态, 给予10s的延迟时间
-func clearState(connID uint64) {
-	if data, ok := connToStateTable.Load(connID); ok {
-		state, _ := data.(*connState)
-		state.Lock()
-		defer state.Unlock()
-		state.reConnTimer = AfterFunc(10*time.Second, func() {
-			ctx := context.TODO()
-			client.DelConn(&ctx, connID, nil)
-			// 删除一些state的状态
-			connToStateTable.Delete(connID)
-		})
+func (c *connState) reSetReConnTimer() {
+	c.Lock()
+	defer c.Unlock()
+
+	if c.reConnTimer != nil {
+		c.reConnTimer.Stop()
 	}
+	
+	// 初始化重连定时器
+	c.reConnTimer = AfterFunc(10*time.Second, func() {
+		ctx := context.TODO()
+		// 整体connID状态登出
+		cs.connLogOut(ctx, c.connID)
+	})
 }
 
-func rePush(connID uint64, msgData []byte) {
-	sendMsg(connID, message.CmdType_Push, msgData)
-	if data, ok := connToStateTable.Load(connID); ok {
-		state, _ := data.(*connState)
-		state.Lock()
-		defer state.Unlock()
-		if state.msgTimer != nil {
-			state.msgTimer.Stop()
-		}
-		state.msgTimer = AfterFunc(100*time.Millisecond, func() {
-			rePush(connID, msgData)
-		})
+func (c *connState) ackLastMsg(ctx context.Context, sessionID, msgID uint64) bool {
+	c.Lock()
+	defer c.Unlock()
+	msgTimerLock := fmt.Sprintf("%d_%d", sessionID, msgID)
+	if c.msgTimerLock != msgTimerLock {
+		return false
 	}
+	slot := cs.getConnStateSlot(c.connID)
+	key := fmt.Sprintf(cache.LastMsgKey, slot, c.connID)
+	if err := cache.Del(ctx, key); err != nil {
+		return false
+	}
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+	}
+	return true
 }
