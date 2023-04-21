@@ -52,12 +52,8 @@ func (e *ePool) createAcceptProcess() {
 		go func() {
 			for {
 				conn, e := e.ln.AcceptTCP()
-				// 限流熔断
-				if !checkTcp() {
-					_ = conn.Close()
-					continue
-				}
-				setTcpConifg(conn)
+
+				// 首先判断连接是否出错
 				if e != nil {
 					if ne, ok := e.(net.Error); ok && ne.Temporary() {
 						fmt.Errorf("accept temp err: %v", ne)
@@ -65,6 +61,14 @@ func (e *ePool) createAcceptProcess() {
 					}
 					fmt.Errorf("accept err: %v", e)
 				}
+
+				// 之后进行限流熔断检查与TCP设置
+				if !checkTcp() {
+					_ = conn.Close()
+					continue
+				}
+				setTcpConifg(conn)
+
 				c := NewConnection(conn)
 				ep.addTask(c)
 			}
