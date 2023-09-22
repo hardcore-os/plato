@@ -149,9 +149,9 @@ func (cs *cacheState) getConnStateSlot(connID uint64) uint64 {
 }
 
 // 使用lua实现比较并自增
-func (cs *cacheState) compareAndIncrClientID(ctx context.Context, connID, oldMaxClientID uint64) bool {
+func (cs *cacheState) compareAndIncrClientID(ctx context.Context, connID, oldMaxClientID uint64, sessionId string) bool {
 	slot := cs.getConnStateSlot(connID)
-	key := fmt.Sprintf(cache.MaxClientIDKey, slot, connID)
+	key := fmt.Sprintf(cache.MaxClientIDKey, slot, connID, sessionId)
 	fmt.Printf("RunLuaInt %s, %d, %d\n", key, oldMaxClientID, cache.TTL7D)
 	var (
 		res int

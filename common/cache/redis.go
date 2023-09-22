@@ -52,8 +52,8 @@ func SetBytes(ctx context.Context, key string, value []byte, ttl time.Duration) 
 	return cmd.Err()
 }
 
-func Del(ctx context.Context, key string) error {
-	cmd := rdb.Conn().Del(ctx, key)
+func Del(ctx context.Context, key ...string) error {
+	cmd := rdb.Conn().Del(ctx, key...)
 	if cmd == nil {
 		return errors.New("redis Del cmd is nil")
 	}
@@ -120,4 +120,8 @@ func RunLuaInt(ctx context.Context, name string, keys []string, args ...interfac
 
 		return cmd.Int()
 	}
+}
+
+func GetKeys(ctx context.Context, key string) ([]string, error) {
+	return rdb.Keys(ctx, key).Result()
 }
