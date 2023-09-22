@@ -47,12 +47,6 @@ func (c *connState) close(ctx context.Context) error {
 	slot := cs.getConnStateSlot(c.connID)
 
 	key := fmt.Sprintf(cache.MaxClientIDKey, slot, c.connID, "*")
-	err = cache.Del(ctx, key)
-	if err != nil {
-		return err
-	}
-
-	// 使用通配符模式查找匹配的键
 	keys, err := cache.GetKeys(ctx, key)
 	if err != nil {
 		return err
