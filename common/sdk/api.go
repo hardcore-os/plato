@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -55,11 +54,12 @@ func NewChat(ip net.IP, port int, nick, userID, sessionID string) *Chat {
 }
 func (chat *Chat) Send(msg *Message) {
 	data, _ := json.Marshal(msg)
-	key := fmt.Sprintf("%d", chat.conn.connID)
+	//key := fmt.Sprintf("%d", chat.conn.connID)
 	upMsg := &message.UPMsg{
 		Head: &message.UPMsgHead{
-			ClientID: chat.getClientID(key),
-			ConnID:   chat.conn.connID,
+			ClientID:  chat.getClientID(chat.SessionID),
+			ConnID:    chat.conn.connID,
+			SessionId: chat.SessionID,
 		},
 		UPMsgBody: data,
 	}
@@ -68,8 +68,7 @@ func (chat *Chat) Send(msg *Message) {
 }
 
 func (chat *Chat) GetCurClientID() uint64 {
-	key := fmt.Sprintf("%d", chat.conn.connID)
-	if id, ok := chat.MsgClientIDTable[key]; ok {
+	if id, ok := chat.MsgClientIDTable[chat.SessionID]; ok {
 		return id
 	}
 	return 0
@@ -86,6 +85,8 @@ func (chat *Chat) Close() {
 func (chat *Chat) ReConn() {
 	chat.Lock()
 	defer chat.Unlock()
+	// 需要重置clientId
+	chat.MsgClientIDTable = make(map[string]uint64)
 	chat.conn.reConn()
 	chat.reConn()
 }

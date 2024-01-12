@@ -30,6 +30,7 @@ message UPMsg{
 message UPMsgHead{
     uint64 ClientID = 1;
     uint64 ConnID = 2;
+    string SessionId = 3;
  }
 
  message PushMsg{

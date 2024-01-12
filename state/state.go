@@ -46,10 +46,18 @@ func (c *connState) close(ctx context.Context) error {
 
 	slot := cs.getConnStateSlot(c.connID)
 
-	key := fmt.Sprintf(cache.MaxClientIDKey, slot, c.connID)
-	err = cache.Del(ctx, key)
+	key := fmt.Sprintf(cache.MaxClientIDKey, slot, c.connID, "*")
+	keys, err := cache.GetKeys(ctx, key)
 	if err != nil {
 		return err
+	}
+
+	// 删除匹配的键
+	if len(keys) > 0 {
+		err = cache.Del(ctx, keys...)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = router.DelRecord(ctx, c.did)
@@ -135,7 +143,7 @@ func (c *connState) reSetReConnTimer() {
 	if c.reConnTimer != nil {
 		c.reConnTimer.Stop()
 	}
-	
+
 	// 初始化重连定时器
 	c.reConnTimer = AfterFunc(10*time.Second, func() {
 		ctx := context.TODO()

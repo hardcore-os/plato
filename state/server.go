@@ -132,7 +132,7 @@ func upMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
 		fmt.Printf("upMsgHandler:err=%s\n", err.Error())
 		return
 	}
-	if cs.compareAndIncrClientID(*cmdCtx.Ctx, cmdCtx.ConnID, upMsg.Head.ClientID) {
+	if cs.compareAndIncrClientID(*cmdCtx.Ctx, cmdCtx.ConnID, upMsg.Head.ClientID, upMsg.Head.SessionId) {
 		// 调用下游业务层rpc，只有当rpc回复成功后才能更新max_clientID
 		sendACKMsg(message.CmdType_UP, cmdCtx.ConnID, upMsg.Head.ClientID, 0, "ok")
 		// TODO 这里应该调用业务层的代码
