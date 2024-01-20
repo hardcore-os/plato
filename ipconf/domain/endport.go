@@ -35,7 +35,7 @@ func (ed *Endport) UpdateStat(s *Stat) {
 	ed.window.statChan <- s
 }
 
-func (ed *Endport) CalculateScore(ctx *IpConfConext) {
+func (ed *Endport) CalculateScore(ctx *IpConfContext) {
 	// 如果 stats 字段是空的，则直接使用上一次计算的结果，此次不更新
 	if ed.Stats != nil {
 		ed.ActiveSorce = ed.Stats.CalculateActiveSorce()

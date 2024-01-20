@@ -28,7 +28,7 @@ func Init() {
 		}
 	}()
 }
-func Dispatch(ctx *IpConfConext) []*Endport {
+func Dispatch(ctx *IpConfContext) []*Endport {
 	// Step1: 获得候选endport
 	eds := dp.getCandidateEndport(ctx)
 	// Step2: 逐一计算得分
@@ -53,7 +53,7 @@ func Dispatch(ctx *IpConfConext) []*Endport {
 	return eds
 }
 
-func (dp *Dispatcher) getCandidateEndport(ctx *IpConfConext) []*Endport {
+func (dp *Dispatcher) getCandidateEndport(ctx *IpConfContext) []*Endport {
 	dp.RLock()
 	defer dp.RUnlock()
 	candidateList := make([]*Endport, 0, len(dp.candidateTable))
