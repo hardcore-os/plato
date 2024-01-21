@@ -90,6 +90,7 @@ func (g *Graph) Run(ctx context.Context) error {
 			g.tryStop(it)
 		case RetryableError:
 			if it.retryNum > 0 {
+				it.retryNum -= 1
 				g.e.workPool.Submit(func() { g.work(it) })
 			}
 		case NonRetryable:
