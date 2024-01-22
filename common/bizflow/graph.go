@@ -119,7 +119,7 @@ func (g *Graph) execNext(it *item) {
 		}
 	}
 }
-func (g *Graph) masterChanClosed() bool {
+func (g *Graph) eventChanClosed() bool {
 	select {
 	case _, ok := <-g.eventChan:
 		return !ok
@@ -129,11 +129,11 @@ func (g *Graph) masterChanClosed() bool {
 }
 func (g *Graph) work(it *item) {
 	// 先检查一下
-	if g.masterChanClosed() {
+	if g.eventChanClosed() {
 		return
 	}
 	defer func() {
-		if !g.masterChanClosed() {
+		if !g.eventChanClosed() {
 			g.eventChan <- it
 		}
 	}()
