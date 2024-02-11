@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option go_package = "common/idl/base";
+//protoc --go-grpc_out=. --go_out=. ./common/idl/base/base.proto
+package base;
+
+
+message BaseResp {
+    uint32 Code = 1;
+    string Msg = 2;
+    string LogID = 3;
+}

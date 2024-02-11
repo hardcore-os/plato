@@ -125,3 +125,23 @@ func RunLuaInt(ctx context.Context, name string, keys []string, args ...interfac
 func GetKeys(ctx context.Context, key string) ([]string, error) {
 	return rdb.Keys(ctx, key).Result()
 }
+
+// redis cache
+type redisCache struct {
+}
+
+func newRedisCache(opt *Options) *redisCache {
+	return &redisCache{}
+}
+
+func (r *redisCache) MSet(keys map[string]interface{}) {
+
+}
+
+func (r *redisCache) MGet(key []string) map[string]interface{} {
+	return nil
+}
+
+func (r *redisCache) MDel(key []string) {
+
+}

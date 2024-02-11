@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+
+import "common/idl/base/base.proto";
+import "common/idl/domain/user/user_dto.proto";
+package  service;
+option go_package = "domain/user/rpc/service";
+
+
+// user domain rpc server定义
+// 在项目根目录下执行 执行protoc --go-grpc_out=. --go_out=. ./domain/user/rpc/service/user.proto
+
+service user {
+    rpc QueryUsers(QueryUsersRequest) returns (QueryUsersResponse);
+    rpc CreateUsers(CreateUsersRequest) returns (CreateUsersResponse);
+    rpc UpdateUsers(UpdateUsersRequest) returns (UpdateUsersResponse);
+}
+  
+message QueryUsersRequest{
+   map<uint64, QueryUserOption> opts = 1;
+}
+
+message QueryUserOption{
+    repeated uint64 deviceIDList = 1;
+    bool allDevice = 2;
+    bool activeDevice = 3;
+}
+
+message QueryUsersResponse{
+    base.BaseResp base = 1;
+    map<uint64,.user.UserDTO>  users = 2;
+}
+
+message CreateUsersRequest{
+    repeated .user.UserDTO users = 1;
+}
+
+message CreateUsersResponse{
+    base.BaseResp base = 1;
+    int32   code = 2;
+    string msg = 3;
+}
+
+message UpdateUsersRequest{
+    repeated .user.UserDTO users = 1;
+}
+
+message UpdateUsersResponse{
+    base.BaseResp base = 1;
+    int32   code = 2;
+    string msg = 3;
+}
