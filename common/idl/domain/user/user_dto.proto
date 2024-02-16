@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "common/idl/domain/user";
+//protoc --go-grpc_out=. --go_out=. ./common/idl/domain/user/user_dto.proto
+package user;
+
+message UserDTO {
+    uint64 userID = 1;
+    DeviceDTO device = 2;
+    SettingDTO setting = 3;
+    InformationDTO information = 4;
+    ProfileDTO  pprofile = 5;
+}
+
+message DeviceDTO {
+    uint64 deviceID = 1;
+    string os = 2;
+    string appVersion = 3;
+    string type = 4;
+    string model = 5;
+}
+
+message SettingDTO {
+   string fontSize  = 1;
+   bool darkMode = 2;
+   bool receiveNotification = 3;
+   string language = 4;
+   bool notifications = 5;
+}
+
+// 个人资料信息，在个人信息页面展示
+message InformationDTO {
+    string nickname = 1;
+    string avatar = 2;
+    string signature = 3;
+}
+
+// 异步任务构建用户画像
+message ProfileDTO {
+    string location = 1;
+    int32 age = 2;
+    string gender = 3;
+    string tags = 4;
+}

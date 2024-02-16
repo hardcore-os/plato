@@ -11,7 +11,7 @@ func GetSateCmdChannelNum() int {
 	return viper.GetInt("state.cmd_channel_num")
 }
 func GetSateServiceAddr() string {
-	return viper.GetString("state.servide_addr")
+	return viper.GetString("state.service_addr")
 }
 func GetStateServiceName() string {
 	return viper.GetString("state.service_name")
