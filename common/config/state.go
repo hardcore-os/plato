@@ -41,7 +41,7 @@ func GetStateServerLoginSlotRange() []int {
 	}
 	res := make([]int, right-left+1)
 	for i := left; i <= right; i++ {
-		res[i] = i
+		res[i-left] = i
 	}
 	connStateSlotList = res
 	return connStateSlotList
