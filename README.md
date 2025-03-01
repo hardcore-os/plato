@@ -8,3 +8,5 @@ https://hardcore.feishu.cn/wiki/wikcnRfpMp8DUAxp8AtKAEF7Hng
 3. 架构可用性4个9建设
 4. 超大规模消息推送优化
 5. 直播/聊天室/弹幕多场景消息中台扩展
+
+![Architecture Diagram](architecture-im.jpg)
