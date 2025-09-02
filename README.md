@@ -1,6 +1,5 @@
 # plato 
-一款纯go编写的，支持亿级通信的IM系统。
-https://hardcore.feishu.cn/wiki/wikcnRfpMp8DUAxp8AtKAEF7Hng
+一款纯go编写的，高性能通信的IM系统。
 
 # 项目亮点
 1. 单机百万长连接热重启实现

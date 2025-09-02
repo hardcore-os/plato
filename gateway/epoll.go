@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"reflect"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -46,30 +45,38 @@ func newEPool(ln *net.TCPListener, cb func(c *connection, ep *epoller)) *ePool {
 	}
 }
 
-// 创建一个专门处理 accept 事件的协程，与当前cpu的核数对应，能够发挥最大功效
 func (e *ePool) createAcceptProcess() {
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func() {
-			for {
-				conn, e := e.ln.AcceptTCP()
-				// 限流熔断
-				if !checkTcp() {
-					_ = conn.Close()
-					continue
-				}
-				setTcpConifg(conn)
-				if e != nil {
-					if ne, ok := e.(net.Error); ok && ne.Temporary() {
-						fmt.Errorf("accept temp err: %v", ne)
+	go func() { // 单goroutine负责accept
+		for {
+			conn, err := e.ln.AcceptTCP()
+			if err != nil {
+				if ne, ok := err.(net.Error); ok {
+					if ne.Temporary() {
+						log.Printf("temp accept err: %v", ne)
 						continue
 					}
-					fmt.Errorf("accept err: %v", e)
+					log.Printf("permanent accept err: %v", err)
+					return // 停止循环
 				}
-				c := NewConnection(conn)
-				ep.addTask(c)
+				log.Printf("accept err: %v", err)
+				continue
 			}
-		}()
-	}
+			if !checkConnRate() { // 熔断检查
+				conn.Close()
+				log.Printf("connection rejected by rate limiter")
+				continue
+			}
+			// 设置TCP配置
+			setTcpConfig(conn)
+			// 分发任务（确保非阻塞）
+			select {
+			case e.eChan <- NewConnection(conn):
+			default:
+				conn.Close()
+				log.Printf("task queue full, connection closed")
+			}
+		}
+	}()
 }
 
 func (e *ePool) startEPool() {
@@ -213,12 +220,12 @@ func subTcpNum() {
 	atomic.AddInt32(&tcpNum, -1)
 }
 
-func checkTcp() bool {
+func checkConnRate() bool {
 	num := getTcpNum()
 	maxTcpNum := config.GetGatewayMaxTcpNum()
 	return num <= maxTcpNum
 }
 
-func setTcpConifg(c *net.TCPConn) {
+func setTcpConfig(c *net.TCPConn) {
 	_ = c.SetKeepAlive(true)
 }
