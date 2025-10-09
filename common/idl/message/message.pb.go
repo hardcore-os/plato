@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.31.0
 // 	protoc        v3.6.1
-// source: message/message.proto
+// source: msg/msg.proto
 
 package message
 
@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// cd common/idl; protoc -I message  --go_out=plugins=grpc:message  message/message.proto
+// cd common/idl; protoc -I msg  --go_out=plugins=grpc:msg  msg/msg.proto
 type CmdType int32
 
 const (
@@ -85,7 +85,7 @@ type MsgCmd struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type    CmdType `protobuf:"varint,1,opt,name=Type,proto3,enum=message.CmdType" json:"Type,omitempty"`
+	Type    CmdType `protobuf:"varint,1,opt,name=Type,proto3,enum=msg.CmdType" json:"Type,omitempty"`
 	Payload []byte  `protobuf:"bytes,2,opt,name=Payload,proto3" json:"Payload,omitempty"`
 }
 
@@ -326,7 +326,7 @@ type ACKMsg struct {
 
 	Code      uint32  `protobuf:"varint,1,opt,name=Code,proto3" json:"Code,omitempty"`
 	Msg       string  `protobuf:"bytes,2,opt,name=Msg,proto3" json:"Msg,omitempty"`
-	Type      CmdType `protobuf:"varint,3,opt,name=Type,proto3,enum=message.CmdType" json:"Type,omitempty"`
+	Type      CmdType `protobuf:"varint,3,opt,name=Type,proto3,enum=msg.CmdType" json:"Type,omitempty"`
 	ConnID    uint64  `protobuf:"varint,4,opt,name=ConnID,proto3" json:"ConnID,omitempty"`
 	ClientID  uint64  `protobuf:"varint,5,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
 	SessionID uint64  `protobuf:"varint,6,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
@@ -800,26 +800,26 @@ func file_message_message_proto_rawDescGZIP() []byte {
 var file_message_message_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_message_message_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_message_message_proto_goTypes = []interface{}{
-	(CmdType)(0),             // 0: message.CmdType
-	(*MsgCmd)(nil),           // 1: message.MsgCmd
-	(*UPMsg)(nil),            // 2: message.UPMsg
-	(*UPMsgHead)(nil),        // 3: message.UPMsgHead
-	(*PushMsg)(nil),          // 4: message.PushMsg
-	(*ACKMsg)(nil),           // 5: message.ACKMsg
-	(*LoginMsgHead)(nil),     // 6: message.LoginMsgHead
-	(*LoginMsg)(nil),         // 7: message.LoginMsg
-	(*HeartbeatMsgHead)(nil), // 8: message.HeartbeatMsgHead
-	(*HeartbeatMsg)(nil),     // 9: message.HeartbeatMsg
-	(*ReConnMsgHead)(nil),    // 10: message.ReConnMsgHead
-	(*ReConnMsg)(nil),        // 11: message.ReConnMsg
+	(CmdType)(0),             // 0: msg.CmdType
+	(*MsgCmd)(nil),           // 1: msg.MsgCmd
+	(*UPMsg)(nil),            // 2: msg.UPMsg
+	(*UPMsgHead)(nil),        // 3: msg.UPMsgHead
+	(*PushMsg)(nil),          // 4: msg.PushMsg
+	(*ACKMsg)(nil),           // 5: msg.ACKMsg
+	(*LoginMsgHead)(nil),     // 6: msg.LoginMsgHead
+	(*LoginMsg)(nil),         // 7: msg.LoginMsg
+	(*HeartbeatMsgHead)(nil), // 8: msg.HeartbeatMsgHead
+	(*HeartbeatMsg)(nil),     // 9: msg.HeartbeatMsg
+	(*ReConnMsgHead)(nil),    // 10: msg.ReConnMsgHead
+	(*ReConnMsg)(nil),        // 11: msg.ReConnMsg
 }
 var file_message_message_proto_depIdxs = []int32{
-	0,  // 0: message.MsgCmd.Type:type_name -> message.CmdType
-	3,  // 1: message.UPMsg.Head:type_name -> message.UPMsgHead
-	0,  // 2: message.ACKMsg.Type:type_name -> message.CmdType
-	6,  // 3: message.LoginMsg.Head:type_name -> message.LoginMsgHead
-	8,  // 4: message.HeartbeatMsg.Head:type_name -> message.HeartbeatMsgHead
-	10, // 5: message.ReConnMsg.Head:type_name -> message.ReConnMsgHead
+	0,  // 0: msg.MsgCmd.Type:type_name -> msg.CmdType
+	3,  // 1: msg.UPMsg.Head:type_name -> msg.UPMsgHead
+	0,  // 2: msg.ACKMsg.Type:type_name -> msg.CmdType
+	6,  // 3: msg.LoginMsg.Head:type_name -> msg.LoginMsgHead
+	8,  // 4: msg.HeartbeatMsg.Head:type_name -> msg.HeartbeatMsgHead
+	10, // 5: msg.ReConnMsg.Head:type_name -> msg.ReConnMsgHead
 	6,  // [6:6] is the sub-list for method output_type
 	6,  // [6:6] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name

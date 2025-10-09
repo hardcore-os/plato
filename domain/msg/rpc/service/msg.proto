@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "common/idl/base/base.proto";
+import "common/idl/domain/msg/msg_dto.proto";
+package  service;
+option go_package = "domain/msg/rpc/service";
+
+
+// user domain rpc server定义
+// 在项目根目录下执行 执行protoc --go-grpc_out=. --go_out=. ./domain/message/rpc/service/message.proto
+
+service msg {
+    rpc SendMsg(SendMsgReq) returns (SendMsgResp);
+}
+
+message SendMsgReq{
+  .msg.msgDTO msgData = 1;
+}
+
+message SendMsgResp {
+  string serverMsgID = 1;
+  string clientMsgID = 2;
+  int64  sendTime = 3;
+}

@@ -74,7 +74,7 @@ func (chat *Chat) GetCurClientID() uint64 {
 	return 0
 }
 
-//Close close chat
+// Close close chat
 func (chat *Chat) Close() {
 	chat.conn.close()
 	close(chat.closeChan)
@@ -91,7 +91,7 @@ func (chat *Chat) ReConn() {
 	chat.reConn()
 }
 
-//Recv receive message
+// Recv receive msg
 func (chat *Chat) Recv() <-chan *Message {
 	return chat.conn.recv()
 }

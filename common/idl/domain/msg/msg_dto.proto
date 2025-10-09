@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "common/idl/domain/msg";
+//protoc --go-grpc_out=. --go_out=. ./common/idl/domain/msg/msg_dto.proto
+package msg;
+
+message msgDTO {
+  string sendID = 1;
+  string recvID = 2;
+  string groupID = 3;
+  string clientMsgID = 4;
+  string ServerMsgID = 5;
+  int32 senderPlatformID = 6;
+  string senderNickname = 7;
+  string senderFaceURL = 8;
+  int32 sessionType = 9;
+  int32 msgFrom = 10;
+  int32 ContentType = 11;
+  bytes Content = 12;
+  int64 Seq = 13;
+  int64 SendTime = 14;
+  int64 CreateTime = 15;
+  int32 Status = 16;
+  bool IsRead = 17;
+}

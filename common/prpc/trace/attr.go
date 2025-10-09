@@ -9,17 +9,17 @@ import (
 const (
 	// GRPCStatusCodeKey is convention for numeric status code of a gRPC request.
 	GRPCStatusCodeKey = attribute.Key("rpc.grpc.status_code")
-	// RPCNameKey is the name of message transmitted or received.
+	// RPCNameKey is the name of msg transmitted or received.
 	RPCNameKey = attribute.Key("name")
-	// RPCMessageTypeKey is the type of message transmitted or received.
-	RPCMessageTypeKey = attribute.Key("message.type")
-	// RPCMessageIDKey is the identifier of message transmitted or received.
-	RPCMessageIDKey = attribute.Key("message.id")
-	// RPCMessageCompressedSizeKey is the compressed size of the message transmitted or received in bytes.
-	RPCMessageCompressedSizeKey = attribute.Key("message.compressed_size")
-	// RPCMessageUncompressedSizeKey is the uncompressed size of the message
+	// RPCMessageTypeKey is the type of msg transmitted or received.
+	RPCMessageTypeKey = attribute.Key("msg.type")
+	// RPCMessageIDKey is the identifier of msg transmitted or received.
+	RPCMessageIDKey = attribute.Key("msg.id")
+	// RPCMessageCompressedSizeKey is the compressed size of the msg transmitted or received in bytes.
+	RPCMessageCompressedSizeKey = attribute.Key("msg.compressed_size")
+	// RPCMessageUncompressedSizeKey is the uncompressed size of the msg
 	// transmitted or received in bytes.
-	RPCMessageUncompressedSizeKey = attribute.Key("message.uncompressed_size")
+	RPCMessageUncompressedSizeKey = attribute.Key("msg.uncompressed_size")
 	// ServerEnvironment ...
 	ServerEnvironment = attribute.Key("environment")
 )
@@ -28,11 +28,11 @@ const (
 var (
 	// RPCSystemGRPC is the semantic convention for gRPC as the remoting system.
 	RPCSystemGRPC = semconv.RPCSystemKey.String("grpc")
-	// RPCNameMessage is the semantic convention for a message named message.
-	RPCNameMessage = RPCNameKey.String("message")
-	// RPCMessageTypeSent is the semantic conventions for sent RPC message types.
+	// RPCNameMessage is the semantic convention for a msg named msg.
+	RPCNameMessage = RPCNameKey.String("msg")
+	// RPCMessageTypeSent is the semantic conventions for sent RPC msg types.
 	RPCMessageTypeSent = RPCMessageTypeKey.String("SENT")
-	// RPCMessageTypeReceived is the semantic conventions for the received RPC message types.
+	// RPCMessageTypeReceived is the semantic conventions for the received RPC msg types.
 	RPCMessageTypeReceived = RPCMessageTypeKey.String("RECEIVED")
 )
 
