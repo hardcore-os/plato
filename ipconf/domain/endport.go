@@ -25,7 +25,7 @@ func NewEndport(ip, port string) *Endport {
 		for stat := range ed.window.statChan {
 			ed.window.appendStat(stat)
 			newStat := ed.window.getStat()
-			atomic.SwapPointer((*unsafe.Pointer)((unsafe.Pointer)(ed.Stats)), unsafe.Pointer(newStat))
+			atomic.SwapPointer((*unsafe.Pointer)(unsafe.Pointer(&ed.Stats)), unsafe.Pointer(newStat))
 		}
 	}()
 	return ed
